@@ -48,7 +48,7 @@ def create_Roles(p_ID):
         "collegeIdList": ids
         
     },"p_text")
-    return {"colleges":c, "collegIDs": ids},200
+    return {"colleges":c, "collegeIDs": ids},200
     
 
 #Create Post
