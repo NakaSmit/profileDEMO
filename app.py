@@ -34,16 +34,21 @@ def create_Roles(p_ID):
     data = db.collection("Users").document(p_ID).get().to_dict()
     colleges = db.collection(f"Users/{p_ID}/UserColleges").stream()
     c=[]
+    ids = []
     for college in colleges:
         createFire(f"Users/{p_ID}/Profile/p_text/collegeRoles",{
-            "Roles":college.get("Roles")
-        }, college.get("CollegeName"))
+            "Roles":college.get("Roles"),
+            "Name": college.get("CollegeName")
+        }, college.id)
         c.append(college.get("CollegeName"))
+        ids.append(college.id)
     
     createFire(f"Users/{p_ID}/Profile",{
-        "collegeList": c
+        "collegeList": c,
+        "collegeIdList": ids
+        
     },"p_text")
-    return c,200
+    return {"colleges":c, "collegIDs": ids},200
     
 
 #Create Post
@@ -97,9 +102,9 @@ def create_default_profile(p_ID):
         "photo_type":photo_type,
         "profile_url":data.get("photo_url"),    
     }
-    roles={
-        "Roles":data.get("Roles")
-    }
+    # roles={
+    #     "Roles":data.get("Roles")
+    # }
 
 
     createFire(f"Users/{p_ID}/Profile",pText,"p_text")
@@ -160,9 +165,9 @@ def fetch_profile(p_ID):
     else:
         return create_default_profile(p_ID),200
 
-@app.route("/get-Roles/<p_ID>/<college_Name>",methods=["GET"])
-def get_Roles(p_ID,college_Name):
-    college_Roles= db.collection(f"Users/{p_ID}/Profile/p_text/collegeRoles").document(college_Name).get().to_dict().get("Roles")
+@app.route("/get-Roles/<p_ID>/<college_id>")
+def get_Roles(p_ID,college_id):
+    college_Roles= db.collection(f"Users/{p_ID}/Profile/p_text/collegeRoles").document(college_id).get().to_dict().get("Roles")
     return college_Roles,200
 
 
