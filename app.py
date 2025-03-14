@@ -114,8 +114,8 @@ def create_default_profile(p_ID):
     return jsonify({"p_text":pText, "p_photo":pPhoto }),200
 
 #Edit Profile  
-#@app.route("/edit-default-profile/<p_ID>/<display_name>/<email>/<uid>/<p_phone>/<user_class>/<p_bio>/<college_name>/<college_semORyr>/<photo_url>/<posts>", methods=["GET"])
-@app.route("/edit-default-profile/<p_ID>/<display_name>/<email>/<uid>/<p_phone>/<user_class>/<p_bio>", methods=["GET"])
+@app.route("/edit-default-profile/<p_ID>/<display_name>/<email>/<uid>/<p_phone>/<user_class>/<p_bio>/<college_name>/<college_semORyr>/<photo_url>/<posts>", methods=["GET"])
+#@app.route("/edit-default-profile/<p_ID>/<display_name>/<email>/<uid>/<p_phone>/<user_class>/<p_bio>", methods=["GET"])
 def edit_default_profile(p_ID,p_phone,user_class,p_bio,college_name,college_semORyr,display_name,email,uid,photo_url,posts):
     #photo_type=False(supabase)  
     #photo_type=True(firebase)  
