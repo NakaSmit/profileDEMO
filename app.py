@@ -110,12 +110,12 @@ def create_default_profile(p_ID):
     createFire(f"Users/{p_ID}/Profile",pText,"p_text")
     createFire(f"Users/{p_ID}/Profile",pPhoto,"p_photo")
     
-    
     return jsonify({"p_text":pText, "p_photo":pPhoto }),200
 
 #Edit Profile  
 @app.route("/edit-default-profile/<p_ID>/<display_name>/<email>/<uid>/<p_phone>/<user_class>/<p_bio>/<college_name>/<college_semORyr>/<photo_url>/<posts>", methods=["GET"])
 #@app.route("/edit-default-profile/<p_ID>/<display_name>/<email>/<uid>/<p_phone>/<user_class>/<p_bio>", methods=["GET"])
+
 def edit_default_profile(p_ID,p_phone,user_class,p_bio,college_name,college_semORyr,display_name,email,uid,photo_url,posts):
     #photo_type=False(supabase)  
     #photo_type=True(firebase)  
@@ -134,14 +134,30 @@ def edit_default_profile(p_ID,p_phone,user_class,p_bio,college_name,college_semO
     }
     pPhoto={
         "photo_type":photo_type,
-        "profile_url": photo_url,
+        "photo_url": photo_url,
     }
     
     createFire(f"Users/{p_ID}/Profile",pText,"p_text")
     createFire(f"Users/{p_ID}/Profile",pPhoto,"p_photo")
     
-    
     return jsonify({"p_text":pText, "p_photo":pPhoto }),200
+
+#EDIT Profile Image
+@app.route("/edit-profile-image/<p_ID>/<path:photo_url>", methods=["GET"])
+def edit_profile_image(p_ID, photo_url):
+    # Determine storage type
+    photo_type = True if "http" in photo_url else False  # True = Firebase, False = Supabase
+
+    pPhoto = {
+        "photo_type": photo_type,
+        "photo_url": "stored in firebase" if photo_type else "stored_in_supabase",
+        "photo":photo_url
+    }
+
+    # Store in Firebase Firestore
+    createFire(f"Users/{p_ID}/Profile", pPhoto, "p_photo")
+
+    return jsonify({"message": "Profile image updated", "p_photo": pPhoto}), 200
 
 
 # Fetch Profile
