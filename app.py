@@ -2,6 +2,8 @@ from flask import Flask, jsonify, request
 import os
 import firebase_admin
 from firebase_admin import credentials, firestore
+from supabase import create_client, Client
+
 
 app = Flask(__name__)
 
@@ -12,6 +14,11 @@ cred_path = os.getenv("GOOGLE_APPLICATION_CREDENTIALS","serviceAccountKey.json")
 cred = credentials.Certificate(cred_path)
 firebase_admin.initialize_app(cred)
 db = firestore.client()
+
+# Initialize Supabase
+SUPABASE_URL = "https://jgaapanxbjpbduxamlgf.supabase.co"
+SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpnYWFwYW54YmpwYmR1eGFtbGdmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDIxMTY5OTYsImV4cCI6MjA1NzY5Mjk5Nn0.8k2g2dryfGuS7DgbUQmmN4at_gXxNKYCvxs4EFxf0yEy"
+supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 @app.route("/")
 def home():
@@ -143,23 +150,60 @@ def edit_default_profile(p_ID,p_phone,user_class,p_bio,college_name,college_semO
     return jsonify({"p_text":pText, "p_photo":pPhoto }),200
 
 #EDIT Profile Image
-@app.route("/edit-profile-image/<p_ID>/<path:photo_url>", methods=["GET"])
+@app.route("/edit-profile-image/<p_ID>/<path:photo_url>", methods=["GET","POST"])
 def edit_profile_image(p_ID, photo_url):
-    # Determine storage type
-    photo_type = True if "http" in photo_url else False  # True = Firebase, False = Supabase
+    if "http" in photo_url:
+        # Directly store in Firebase if it's already a URL
+        pPhoto = {
+            "photo_type": True,
+            "photo_url": photo_url
+        }
+        createFire(f"Users/{p_ID}/Profile", pPhoto, "p_photo")
+        return jsonify({"message": "Profile image updated from URL", "p_photo": pPhoto}), 200
+    else:
+        # Check if an image file is provided
+        if 'image' not in request.files:
+            return jsonify({"error": "No image file provided"}), 400
 
-    pPhoto = {
-        "photo_type": photo_type,
-        "photo_url": "stored in firebase" if photo_type else "stored_in_supabase",
-        "photo":photo_url
-    }
+        image = request.files['image']
+        filename = image.filename
+        temp_path = os.path.join("temp_uploads", filename)
 
-    # Store in Firebase Firestore
-    createFire(f"Users/{p_ID}/Profile", pPhoto, "p_photo")
+        try:
+            # Create temp directory if not exists
+            os.makedirs("temp_uploads", exist_ok=True)
+            
+            # Save the file temporarily
+            image.save(temp_path)
 
-    return jsonify({"message": "Profile image updated", "p_photo": pPhoto}), 200
+            # Upload the saved file to Supabase
+            with open(temp_path, "rb") as file:
+                response = supabase.storage.from_("profile").upload(
+                    file=file,
+                    path=f"pro/{filename}",
+                    file_options={"cache-control": "3600", "upsert": "false"}
+                )
 
+            # Delete the temp file after upload
+            os.remove(temp_path)
 
+            if not response:
+                return jsonify({"error": "Upload to Supabase failed"}), 500
+
+            # Get public URL
+            public_url = supabase.storage.from_("profile").get_public_url(f"pro/{filename}")
+
+            # Store in Firebase
+            pPhoto = {
+                "photo_type": False,
+                "photo_url": public_url
+            }
+            createFire(f"Users/{p_ID}/Profile", pPhoto, "p_photo")
+
+            return jsonify({"message": "Profile image uploaded & updated", "p_photo": pPhoto}), 200
+
+        except Exception as e:
+             return jsonify({"error": str(e)}), 500
 # Fetch Profile
 
 #http://127.0.0.1:5000/fetch-profile/VIc9yUl80yfQoSYcoesyWozVBVa2
