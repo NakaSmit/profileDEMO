@@ -94,7 +94,9 @@ def create_default_profile(p_ID):
 
     data = db.collection("Users").document(p_ID).get().to_dict()
     if "http"  in data.get("photo_url"): photo_type = True
-
+    colleges = data.get("colleges", [])  # Expected format: [{"college_name": "SBMP", "college_semORyr": "6-3"}, {...}]
+    if not colleges:
+        colleges = [{"college_name": "unset", "college_semORyr": "unset"}]
     pText = { 
         "display_name": data.get("display_name"),
         "p_email":data.get("email"),
@@ -120,10 +122,10 @@ def create_default_profile(p_ID):
     return jsonify({"p_text":pText, "p_photo":pPhoto }),200
 
 #Edit Profile  
-@app.route("/edit-default-profile/<p_ID>/<display_name>/<email>/<uid>/<p_phone>/<user_class>/<p_bio>/<college_name>/<college_semORyr>/<photo_url>/<posts>", methods=["GET"])
+@app.route("/edit-default-profile/<p_ID>/<display_name>/<uid>/<user_class>/<p_bio>/<college_name>/<college_semORyr>/<photo_url>/<posts>", methods=["GET"])
 #@app.route("/edit-default-profile/<p_ID>/<display_name>/<email>/<uid>/<p_phone>/<user_class>/<p_bio>", methods=["GET"])
 
-def edit_default_profile(p_ID,p_phone,user_class,p_bio,college_name,college_semORyr,display_name,email,uid,photo_url,posts):
+def edit_default_profile(p_ID,user_class,p_bio,college_name,college_semORyr,display_name,uid,photo_url,posts):
     #photo_type=False(supabase)  
     #photo_type=True(firebase)  
     photo_type=False
@@ -131,9 +133,9 @@ def edit_default_profile(p_ID,p_phone,user_class,p_bio,college_name,college_semO
 
     pText= { 
         "display_name": display_name,
-        "p_email":email,
+       # "p_email":email,
         "uid": uid,
-        "phone_No": p_phone,
+        #"phone_No": p_phone,
         "user_class": user_class,
         "bio": p_bio,
         "college_name" : college_name,
@@ -197,6 +199,62 @@ def edit_profile_image(p_ID, photo_url):
             pPhoto = {
                 "photo_type": False,
                 "photo_url": public_url
+            }
+            createFire(f"Users/{p_ID}/Profile", pPhoto, "p_photo")
+
+            return jsonify({"message": "Profile image uploaded & updated", "p_photo": pPhoto}), 200
+
+        except Exception as e:
+             return jsonify({"error": str(e)}), 500
+
+
+@app.route("/edit-profile-banner/<p_ID>/<path:banner_url>", methods=["GET","POST"])
+def edit_profile_banner(p_ID, banner_url):
+    if "http" in banner_url:
+        # Directly store in Firebase if it's already a URL
+        pPhoto = {
+            "photo_type": True,
+            "banner_url": banner_url
+        }
+        createFire(f"Users/{p_ID}/Profile", pPhoto, "p_photo")
+        return jsonify({"message": "Profile image updated from URL", "p_photo": pPhoto}), 200
+    else:
+        # Check if an image file is provided
+        if 'image' not in request.files:
+            return jsonify({"error": "No image file provided"}), 400
+
+        image = request.files['image']
+        filename = image.filename
+        temp_path = os.path.join("temp_uploads", filename)
+
+        try:
+            # Create temp directory if not exists
+            os.makedirs("temp_uploads", exist_ok=True)
+            
+            # Save the file temporarily
+            image.save(temp_path)
+
+            # Upload the saved file to Supabase
+            with open(temp_path, "rb") as file:
+                response = supabase.storage.from_("profile").upload(
+                    file=file,
+                    path=f"banner/{filename}",
+                    file_options={"cache-control": "3600", "upsert": "false"}
+                )
+
+            # Delete the temp file after upload
+            os.remove(temp_path)
+
+            if not response:
+                return jsonify({"error": "Upload to Supabase failed"}), 500
+
+            # Get public URL
+            public_url = supabase.storage.from_("profile").get_public_url(f"banner/{filename}")
+
+            # Store in Firebase
+            pPhoto = {
+                "photo_type": False,
+                "banner_url": public_url
             }
             createFire(f"Users/{p_ID}/Profile", pPhoto, "p_photo")
 
