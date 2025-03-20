@@ -204,6 +204,29 @@ def edit_profile_image(p_ID, photo_url):
 
         except Exception as e:
              return jsonify({"error": str(e)}), 500
+         
+         
+#CREATE LINKS
+@app.route("/create-link/<p_ID>",methods=["GET"])
+def create_link(p_ID):
+    try:
+        # Extract all query parameters
+        data = request.args.to_dict()
+
+        if not data:
+            return jsonify({"error": "No links provided"}), 400
+
+        # Add links to Firestore under 'Links' collection
+        doc_ref = db.collection(f"Users/{p_ID}/Profile/p_text/Links").document()
+        doc_ref.set(data, merge=True)
+       # createFire(f"Users/{p_ID}/Profile",pText,"p_text")
+
+
+        return jsonify({"message": "Links added successfully", "data": data}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
 # Fetch Profile
 
 #http://127.0.0.1:5000/fetch-profile/VIc9yUl80yfQoSYcoesyWozVBVa2
@@ -231,6 +254,12 @@ def get_Roles(p_ID,college_id):
     college_Roles= db.collection(f"Users/{p_ID}/Profile/p_text/collegeRoles").document(college_id).get().to_dict().get("Roles")
     return college_Roles,200
 
-
+@app.route("/get-link/<p_ID>",methods=["GET"])
+def fetch_link(p_ID):
+    links_ref = db.collection(f"Users/{p_ID}/Profile/p_text/Links").stream()
+    links = {}
+    for doc in links_ref:
+        links.update(doc.to_dict())  # Merge all documents
+    return jsonify({"links": links}), 200
 if __name__ == "__main__":
     app.run(debug=True)
