@@ -340,7 +340,7 @@ def fetch_profile(p_ID):
         p_text = db.collection(f"Users/{p_ID}/Profile").document("p_text").get().to_dict()
         p_photo = db.collection(f"Users/{p_ID}/Profile").document("p_photo").get().to_dict()
 
-        if "http"  in p_photo.get("photo_url"): photo_type = True
+        #if "http"  in p_photo.get("photo_url"): photo_type = True
 
         return jsonify({"p_text":p_text, "p_photo":p_photo }),200
     else:
