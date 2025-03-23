@@ -155,7 +155,7 @@ def edit_default_profile(p_ID,user_class,p_bio,college_name,college_semORyr,disp
 
 
 # Upload endpoint
-supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
+#supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 @app.route('/upload/images', methods=['POST'])
 def upload_to_supabase():
