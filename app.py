@@ -160,7 +160,7 @@ def edit_default_profile(p_ID,user_class,p_bio,college_name,college_semORyr,disp
 @app.route('/upload/images', methods=['POST'])
 def upload_to_supabase():
     BUCKET_NAME = "profile"
-    folder_path = request.form.get('folder_path')
+    folder_path = request.form.get('banner')
     files = request.files.getlist('files')
 
     if not folder_path or not files:
