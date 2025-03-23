@@ -160,7 +160,8 @@ def edit_default_profile(p_ID,user_class,p_bio,college_name,college_semORyr,disp
 @app.route('/upload/images', methods=['POST'])
 def upload_to_supabase():
     BUCKET_NAME = "profile"
-    folder_path = request.form.get('banner')
+    folder_path = request.form.get('folder')  # Expecting 'folder=banner'
+
     files = request.files.getlist('files')
 
     if not folder_path or not files:
@@ -170,14 +171,10 @@ def upload_to_supabase():
 
     for file in files:
         try:
-            # Read file content as bytes
-            file_bytes = file.read()
-
-            # Upload the file to Supabase storage
             file_path = f"{folder_path}/{file.filename}"
-            res = supabase.storage.from_(BUCKET_NAME).upload(
-                file_path, file_bytes, {'content-type': file.content_type}
-            )
+
+            # Upload file to Supabase storage
+            res = supabase.storage.from_(BUCKET_NAME).upload(file_path, file, {"content-type": file.content_type})
 
             # Get public URL
             public_url = supabase.storage.from_(BUCKET_NAME).get_public_url(file_path)
