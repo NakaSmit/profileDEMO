@@ -163,6 +163,8 @@ def upload_to_supabase():
     folder_path = request.form.get('folder')  # Expecting 'folder=banner'
 
     files = request.files.getlist('files')
+    user_id = request.form.get('user_id')  # Expecting user_id from request
+
 
     if not folder_path or not files:
         return jsonify({"error": "Missing folder path or files"}), 400
@@ -173,17 +175,20 @@ def upload_to_supabase():
         try:
             file_path = f"{folder_path}/{file.filename}"
 
-            # Upload file to Supabase storage
+            # Upload to Supabase
             res = supabase.storage.from_(BUCKET_NAME).upload(file_path, file, {"content-type": file.content_type})
-
-            # Get public URL
             public_url = supabase.storage.from_(BUCKET_NAME).get_public_url(file_path)
             uploaded_urls.append(public_url)
+
+            # Update Firestore banner_url
+            user_ref = db.collection("Users").document(user_id).collection("Profile").document("p_photo")
+            user_ref.update({"banner_url": public_url})
 
         except Exception as e:
             return jsonify({"error": f"Failed to upload {file.filename}", "details": str(e)}), 500
 
-    return jsonify({"uploaded_urls": uploaded_urls}), 200
+    return jsonify({"uploaded_urls": uploaded_urls, "message": "Banner updated successfully"}), 200
+
 
 
 
