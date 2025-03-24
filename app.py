@@ -188,7 +188,8 @@ def upload_to_supabase(p_ID):
         except Exception as e:
             return jsonify({"error": f"Failed to upload {file.filename}", "details": str(e)}), 500
 
-    return jsonify({"message": "Banner image uploaded & updated", "p_photo": pPhoto}), 200
+    return jsonify({"uploaded_urls": uploaded_urls, "message": "Banner uploaded and stored"},{"message": "Profile image uploaded & updated", "p_photo": pPhoto}), 200, 200
+
 
 
 
