@@ -158,7 +158,7 @@ def edit_default_profile(p_ID,user_class,p_bio,college_name,college_semORyr,disp
 #supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 @app.route('/upload/images', methods=['POST'])
-def upload_to_supabase():
+def upload_to_supabase(p_ID):
     BUCKET_NAME = "profile"
     folder_path = request.form.get('folder')  # Expecting 'folder=banner'
 
