@@ -182,13 +182,13 @@ def upload_to_supabase(p_ID):
 
             # Update Firestore banner_url
             # Store in Firestore using createFire
-            pPhoto = {"banner_url": public_url}
+            pPhoto = {"banner_url": uploaded_urls}
             createFire(f"Users/{p_ID}/Profile", pPhoto, "p_photo")
 
         except Exception as e:
             return jsonify({"error": f"Failed to upload {file.filename}", "details": str(e)}), 500
 
-    return jsonify({"uploaded_urls": uploaded_urls, "message": "Banner uploaded and stored"}), 200
+    return jsonify({"message": "Banner image uploaded & updated", "p_photo": pPhoto}), 200
 
 
 
