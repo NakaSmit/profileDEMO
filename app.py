@@ -173,23 +173,28 @@ def upload_to_supabase(p_ID):
 
     for file in files:
         try:
-            file_path = f"{folder_path}/{file.filename}"
+            # Read file content as bytes
+            file_bytes = file.read()
 
-            # Upload to Supabase
-            res = supabase.storage.from_(BUCKET_NAME).upload(file_path, file, {"content-type": file.content_type})
+            # Upload the file to Supabase storage
+            file_path = f"{folder_path}/{file.filename}"
+            res = supabase.storage.from_(BUCKET_NAME).upload(
+                file_path, file_bytes, {'content-type': file.content_type}
+            )
+
+            # Get public URL
             public_url = supabase.storage.from_(BUCKET_NAME).get_public_url(file_path)
             uploaded_urls.append(public_url)
-
-            # Update Firestore banner_url
-            # Store in Firestore using createFire
-            pPhoto = {"banner_url": uploaded_urls}
+            pPhoto={
+                "banner_url":public_url
+            }
             createFire(f"Users/{p_ID}/Profile", pPhoto, "p_photo")
+
 
         except Exception as e:
             return jsonify({"error": f"Failed to upload {file.filename}", "details": str(e)}), 500
 
-    return jsonify({"uploaded_urls": uploaded_urls, "message": "Banner uploaded and stored"},{"message": "Profile image uploaded & updated", "p_photo": pPhoto}), 200, 200
-
+    return jsonify({"uploaded_urls": uploaded_urls,"p_photo": pPhoto}), 200
 
 
 
