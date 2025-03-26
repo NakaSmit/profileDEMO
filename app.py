@@ -152,7 +152,48 @@ def edit_default_profile(p_ID,user_class,p_bio,college_name,college_semORyr,disp
     return jsonify({"p_text":pText, "p_photo":pPhoto }),200
 
 
+@app.route('/upload/imagessss', methods=['POST'])
+def uploadto_supabase():
+    BUCKET_NAME = "profile"
+    folder_path = request.form.get('folder_path')
+    files = request.files.getlist('files')
+    p_ID = request.form.get('p_ID')  # Get user ID from form data
+    # photo_type = request.form.get('photo_type', 'True')  # Default to True if not provided
 
+    if not folder_path or not files or not p_ID:
+        return jsonify({"error": "Missing required parameters (folder_path, files, or p_ID)"}), 400
+
+    uploaded_urls = []
+    db = firestore.client()  # Initialize Firestore client
+
+    for file in files:
+        try:
+            # Upload to Supabase
+            file_bytes = file.read()
+            file_path = f"{folder_path}/{file.filename}"
+            res = supabase.storage.from_(BUCKET_NAME).upload(
+                file_path, file_bytes, {'content-type': file.content_type}
+            )
+            public_url = supabase.storage.from_(BUCKET_NAME).get_public_url(file_path)
+            uploaded_urls.append(public_url)
+
+            # Store in Firebase
+            pPhoto = {
+                # "photo_type": photo_type == 'True',  # Convert string to boolean
+                "banner_url": public_url,
+                "timestamp": firestore.SERVER_TIMESTAMP  # Optional: add upload timestamp
+            }
+            
+            # Create document in Firebase
+            db.collection(f"Users/{p_ID}/Profile").document("p_photo").set(pPhoto)
+
+        except Exception as e:
+            return jsonify({"error": f"Failed to process {file.filename}", "details": str(e)}), 500
+
+    return jsonify({
+        "uploaded_urls": uploaded_urls,
+        "firebase_result": f"Successfully updated profile photo for user {p_ID}"
+    }), 200
 
 # Upload endpoint
 #supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
