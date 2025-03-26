@@ -312,24 +312,29 @@ def edit_profile_banner(p_ID, banner_url):
          
          
 #CREATE LINKS
-@app.route("/create-link/<p_ID>",methods=["GET"])
-def create_link(p_ID):
+@app.route('/edit-link/<p_ID>/<platform>', methods=['GET'])
+def update_link(p_ID, platform):
     try:
-        # Extract all query parameters
-        data = request.args.to_dict()
+        link = request.args.get('link')
 
-        if not data:
-            return jsonify({"error": "No links provided"}), 400
+        if not link:
+            return jsonify({"error": "Missing link parameter"}), 400
 
-        # Add links to Firestore under 'Links' collection
-        doc_ref = db.collection(f"Users/{p_ID}/Profile/p_text/Links").document()
-        doc_ref.set(data, merge=True)
-       # createFire(f"Users/{p_ID}/Profile",pText,"p_text")
+        # Firestore update
+        pText = {platform: link}
+        success = createFire(f"Users/{p_ID}/Profile", pText, "p_text")
 
+        if not success:
+            return jsonify({"error": "Failed to update Firestore"}), 500
 
-        return jsonify({"message": "Links added successfully", "data": data}), 200
+        return jsonify({
+            "message": f"{platform} link updated successfully",
+            "updated_link": link,
+            "p_text": pText
+        }), 200
+
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"error": f"Failed to update link: {str(e)}"}), 500
 
 
 # Fetch Profile
