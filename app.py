@@ -259,7 +259,7 @@ def uploadto_supabase():
 
 @app.route('/upload/images', methods=['POST'])
 def upload_to_supabase():
-    BUCKET_NAME = "pofile"
+    BUCKET_NAME = "profile"
     folder_path = request.form.get('folder_path')
     files = request.files.getlist('files')
 
