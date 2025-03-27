@@ -90,10 +90,12 @@ def create_posts(p_ID):
 def create_default_profile(p_ID):
     #photo_type=False(supabase)  
     #photo_type=True(firebase)      
-    photo_type=False
-
+    p_type=False
+    b_type=False
     data = db.collection("Users").document(p_ID).get().to_dict()
-    if "http"  in data.get("photo_url"): photo_type = True
+    if "http"  in data.get("p_url"): p_type = True
+    if "http"  in data.get("b_url"): b_type = True
+
     colleges = data.get("colleges", [])  # Expected format: [{"college_name": "SBMP", "college_semORyr": "6-3"}, {...}]
     if not colleges:
         colleges = [{"college_name": "unset", "college_semORyr": "unset"}]
@@ -108,8 +110,10 @@ def create_default_profile(p_ID):
         "college_semORyr": "unset",
     }
     pPhoto={
-        "photo_type":photo_type,
-        "profile_url":data.get("photo_url"),    
+        "profile_type":p_type,
+        "banner_type":b_type,
+        "profile_url":data.get("p_url"),
+        "banner_url":data.get("b_url")
     }
     # roles={
     #     "Roles":data.get("Roles")
@@ -125,11 +129,13 @@ def create_default_profile(p_ID):
 @app.route("/edit-default-profile/<p_ID>/<display_name>/<uid>/<user_class>/<p_bio>/<college_name>/<college_semORyr>/<photo_url>/<posts>", methods=["GET"])
 #@app.route("/edit-default-profile/<p_ID>/<display_name>/<email>/<uid>/<p_phone>/<user_class>/<p_bio>", methods=["GET"])
 
-def edit_default_profile(p_ID,user_class,p_bio,college_name,college_semORyr,display_name,uid,photo_url,posts):
+def edit_default_profile(p_ID,user_class,p_bio,college_name,college_semORyr,display_name,uid,photo_url,p_url,b_url,posts):
     #photo_type=False(supabase)  
     #photo_type=True(firebase)  
     photo_type=False
     if "http"  in photo_url: photo_type = True
+    if "http"  in p_url: p_type = True
+    if "http"  in b_url: b_type = True
 
     pText= { 
         "display_name": display_name,
@@ -144,6 +150,10 @@ def edit_default_profile(p_ID,user_class,p_bio,college_name,college_semORyr,disp
     pPhoto={
         "photo_type":photo_type,
         "photo_url": photo_url,
+        "profile_type":p_type,
+        "banner_type":b_type,
+        "profile_url":p_url,
+        "banner_url":b_url
     }
     
     createFire(f"Users/{p_ID}/Profile",pText,"p_text")
@@ -267,7 +277,7 @@ def edit_profile_image(p_ID, photo_url):
         # Directly store in Firebase if it's already a URL
         pPhoto = {
             "photo_type": True,
-            "photo_url": photo_url
+            "profile_url": photo_url
         }
         createFire(f"Users/{p_ID}/Profile", pPhoto, "p_photo")
         return jsonify({"message": "Profile image updated from URL", "p_photo": pPhoto}), 200
@@ -307,7 +317,7 @@ def edit_profile_image(p_ID, photo_url):
             # Store in Firebase
             pPhoto = {
                 "photo_type": False,
-                "photo_url": public_url
+                "profile_url": public_url
             }
             createFire(f"Users/{p_ID}/Profile", pPhoto, "p_photo")
 
