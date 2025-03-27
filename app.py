@@ -257,6 +257,36 @@ def uploadto_supabase():
         "firebase_result": f"Successfully updated profile photo for user {p_ID}"
     }), 200
 
+@app.route('/upload/images', methods=['POST'])
+def upload_to_supabase():
+    BUCKET_NAME = "pofile"
+    folder_path = request.form.get('folder_path')
+    files = request.files.getlist('files')
+
+    if not folder_path or not files:
+        return jsonify({"error": "Missing folder path or files"}), 400
+
+    uploaded_urls = []
+
+    for file in files:
+        try:
+            # Read file content as bytes
+            file_bytes = file.read()
+
+            # Upload the file to Supabase storage
+            file_path = f"{folder_path}/{file.filename}"
+            res = supabase.storage.from_(BUCKET_NAME).upload(
+                file_path, file_bytes, {'content-type': file.content_type}
+            )
+
+            # Get public URL
+            public_url = supabase.storage.from_(BUCKET_NAME).get_public_url(file_path)
+            uploaded_urls.append(public_url)
+
+        except Exception as e:
+            return jsonify({"error": f"Failed to upload {file.filename}", "details": str(e)}), 500
+
+    return jsonify({"uploaded_urls": uploaded_urls}), 200
 #EDIT Profile Image
 @app.route("/edit-profile-image/<p_ID>/<path:photo_url>", methods=["GET","POST"])
 def edit_profile_image(p_ID, photo_url):
