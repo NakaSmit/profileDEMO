@@ -214,6 +214,8 @@ def upload_to_file_supabase():
 # Upload endpoint
 #supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
+
+
 @app.route('/upload/imagessss', methods=['POST'])
 def uploadto_supabase():
     BUCKET_NAME = "profile"
@@ -256,6 +258,38 @@ def uploadto_supabase():
         "uploaded_urls": uploaded_urls,
         "firebase_result": f"Successfully updated profile photo for user {p_ID}"
     }), 200
+
+@app.route('/upload/imag', methods=['POST'])       
+def upload_supabase():
+
+    BUCKET_NAME = "profile"
+    folder_path = request.form.get('folder_path')  # Renamed for clarity (instead of 'resume')
+    file = request.files.get('file')  # Single file (key should be 'file' in Postman)
+
+    if not folder_path or not file:
+        return jsonify({"error": "Missing folder path or file"}), 400
+
+    try:
+        # Read file content as bytes
+        file_bytes = file.read()
+
+        # Upload the file to Supabase storage
+        file_path = f"{folder_path}/{file.filename}"
+        res = supabase.storage.from_(BUCKET_NAME).upload(
+            file_path, file_bytes, {'content-type': file.content_type}
+        )
+
+        # Get public URL
+        public_url = supabase.storage.from_(BUCKET_NAME).get_public_url(file_path)
+        pPhoto={
+                "banner_url":public_url
+            }
+        # createFire(f"Users/{p_ID}/Profile", pPhoto, "p_photo")
+    
+        return jsonify({"banner_url": public_url}), 200
+        
+    except Exception as e:
+        return jsonify({"error": f"Failed to upload {file.filename}", "details": str(e)}), 500
 
 @app.route('/upload/images', methods=['POST'])
 def upload_to_supabase():
