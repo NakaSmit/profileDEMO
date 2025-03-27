@@ -152,6 +152,65 @@ def edit_default_profile(p_ID,user_class,p_bio,college_name,college_semORyr,disp
     return jsonify({"p_text":pText, "p_photo":pPhoto }),200
 
 
+BUCKET_NAME = "resume"  # Fixed bucket name
+FOLDER_NAME = "files"  # Fixed folder name inside bucket
+ALLOWED_EXTENSIONS = {'txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif', 'docx', 'xlsx', 'mp4', 'zip'}
+MAX_FILE_SIZE = 50 * 1024 * 1024  # 50MB (Supabase limit)
+
+def allowed_file(filename):
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+@app.route('/upload-file', methods=['POST'])
+def upload_to_file_supabase():
+    if 'file' not in request.files:
+        return jsonify({"error": "No file provided"}), 400
+
+    file = request.files['file']
+    if file.filename == '':
+        return jsonify({"error": "Empty filename"}), 400
+
+    if not allowed_file(file.filename):
+        return jsonify({"error": f"File type not allowed. Allowed types: {', '.join(ALLOWED_EXTENSIONS)}"}), 400
+
+    try:
+        # Secure filename and detect MIME type
+        filename = secure_filename(file.filename)
+        content_type, _ = guess_type(filename)
+        
+        # Check file size
+        file.seek(0, os.SEEK_END)
+        file_size = file.tell()
+        file.seek(0)
+        if file_size > MAX_FILE_SIZE:
+            return jsonify({"error": f"File exceeds {MAX_FILE_SIZE//(1024*1024)}MB limit"}), 400
+
+        # Upload to Supabase (profile bucket -> p_files folder)
+        file_bytes = file.read()
+        file_path = f"{FOLDER_NAME}/{filename}"  # Fixed folder structure
+        
+        supabase.storage.from_(BUCKET_NAME).upload(
+            file_path,
+            file_bytes,
+            {"content-type": content_type or 'application/octet-stream'}
+        )
+
+        # Get public URL
+        public_url = supabase.storage.from_(BUCKET_NAME).get_public_url(file_path)
+        pp={ "status": "success",
+            "filename": filename,
+            "url": public_url,
+            "bucket": BUCKET_NAME,
+            "folder": FOLDER_NAME,
+            "size": file_size,
+            "type": content_type}
+        return jsonify({
+            "pp":pp
+        }), 200
+
+    except Exception as e:
+        return jsonify({"error": "Upload failed", "details": str(e)}), 500
+
 # Upload endpoint
 #supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
