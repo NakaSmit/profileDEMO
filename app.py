@@ -284,9 +284,11 @@ def upload_supabase():
         pPhoto={
                 "banner_url":public_url
             }
+        uploaded_urls.append(public_url)
+
         # createFire(f"Users/{p_ID}/Profile", pPhoto, "p_photo")
     
-        return jsonify({"banner_url": public_url}), 200
+        return jsonify({"banner_url": public_url,"uploaded_urls": uploaded_urls}), 200
         
     except Exception as e:
         return jsonify({"error": f"Failed to upload {file.filename}", "details": str(e)}), 500
