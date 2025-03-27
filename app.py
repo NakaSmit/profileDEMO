@@ -263,7 +263,7 @@ def uploadto_supabase():
 def upload_supabase():
 
     BUCKET_NAME = "profile"
-    folder_path = request.form.get('folder_path')  # Renamed for clarity (instead of 'resume')
+    folder_path = request.form.get('folder-path')  # Renamed for clarity (instead of 'resume')
     file = request.files.get('file')  # Single file (key should be 'file' in Postman)
 
     if not folder_path or not file:
@@ -274,7 +274,7 @@ def upload_supabase():
         file_bytes = file.read()
 
         # Upload the file to Supabase storage
-        file_path = f"{folder_path}/{file.filename}"
+        file_path = f"{folder-path}/{file.filename}"
         res = supabase.storage.from_(BUCKET_NAME).upload(
             file_path, file_bytes, {'content-type': file.content_type}
         )
