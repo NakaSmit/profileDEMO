@@ -16,8 +16,8 @@ firebase_admin.initialize_app(cred)
 db = firestore.client()
 
 # Initialize Supabase
-SUPABASE_URL = "https://jgaapanxbjpbduxamlgf.supabase.co"
-SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpnYWFwYW54YmpwYmR1eGFtbGdmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDIxMTY5OTYsImV4cCI6MjA1NzY5Mjk5Nn0.8k2g2dryfGuS7DgbUQmmN4at_gXxNKYCvxs4EFxf0yEy"
+SUPABASE_URL = "https://ydpuhzopboechregfhti.supabase.co"
+SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlkcHVoem9wYm9lY2hyZWdmaHRpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mzc5MDU1NjMsImV4cCI6MjA1MzQ4MTU2M30.aPJzxA8l2SoX3mYGWhIc49pstdYjbLXMtBDHVfcJFwU"
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 @app.route("/")
