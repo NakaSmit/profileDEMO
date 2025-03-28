@@ -240,9 +240,39 @@ def upload_supabase():
     except Exception as e:
         return jsonify({"error": f"Failed to upload {file.filename}", "details": str(e)}), 500
 
+@app.route("/upload/file", methods=["POST"])
+def upload_file():
+    if "file" not in request.files:
+        return jsonify({"error": "No file provided"}), 400
+
+    file = request.files["pfile"]
+    if file.filename == "":
+        return jsonify({"error": "Empty filename"}), 400
+
+    file_path = f"files/{file.filename}"  # Ensure the file goes into 'profile/files/'
+
+    # Read file bytes
+    file_bytes = file.read()
+
+    try:
+        SUPABASE_BUCKET= "images"
+        
+        # Upload file to Supabase
+        res = supabase.storage.from_(SUPABASE_BUCKET).upload(
+            file_path, file_bytes, {"content-type": file.content_type}
+        )
+
+        # Generate public URL
+        public_url = f"{SUPABASE_URL}/storage/v1/object/public/{SUPABASE_BUCKET}/{file_path}"
+
+        return jsonify({"message": "File uploaded", "url": public_url})
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+        
 @app.route('/upload/images', methods=['POST'])
 def upload_to_supabase():
-    BUCKET_NAME = "profile"
+    BUCKET_NAME = "images"
     folder_path = request.form.get('folder_path')
     files = request.files.getlist('files')
 
