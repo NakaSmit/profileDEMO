@@ -382,7 +382,30 @@ def edit_profile_banner(p_ID, banner_url):
         except Exception as e:
              return jsonify({"error": str(e)}), 500
          
-         
+@app.route("/edit-pImage/<p_ID>/<platform>", methods=["GET"])
+def edit_pImage(p_ID,platform):
+    try:
+        link = request.args.get('link')
+
+        if not link:
+            return jsonify({"error": "Missing link parameter"}), 400
+
+        # Firestore update
+        pPhoto = {platform: link}
+        success = createFire(f"Users/{p_ID}/Profile", pPhoto, "p_photo")
+
+        if not success:
+            return jsonify({"error": "Failed to update Firestore"}), 500
+
+        return jsonify({
+            "message": f"{platform} link updated successfully",
+            "updated_link": link,
+            "p_text": pPhoto
+        }), 200
+
+    except Exception as e:
+        return jsonify({"error": f"Failed to update link: {str(e)}"}), 500
+
 #CREATE LINKS
 @app.route('/edit-link/<p_ID>/<platform>', methods=['GET'])
 def update_link(p_ID, platform):
