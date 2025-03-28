@@ -244,7 +244,7 @@ def upload_supabase():
 @app.route('/upload/files', methods=['POST'])
 def upload_filess():
     BUCKET_NAME = "images"
-    FOLDER_NAME = "files"
+    FOLDER_NAME = request.form.get('FOLDER_NAME')
     
     if 'file' not in request.files:
         return jsonify({"error": "No file provided"}), 400
