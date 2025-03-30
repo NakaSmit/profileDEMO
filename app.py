@@ -60,27 +60,34 @@ def create_Roles(p_ID):
     
 
 #Create Post
-@app.route("/post/<p_ID>", methods=["GET"])
-def create_posts(p_ID):
+@app.route("/post/<p_ID>/<description>/post/", methods=["GET"])
+def create_posts(p_ID,description):
     data = db.collection("Users").document(p_ID).get().to_dict()
 
     # Get the post count dynamically
-    post_collection_ref = db.collection(f"Users/{p_ID}/Profile/p_photo/posts")
+    post_collection_ref = db.collection(f"Users/{p_ID}/Post")
     count_query = post_collection_ref.count()
     count_snapshot = count_query.get()
 
     # Extract count properly
-    post_number = count_snapshot[0][0].value -1 if count_snapshot else -1  
+    # request_data = request.get_json() or {}
+    post_number = count_snapshot[0][0].value -1 if count_snapshot else -1 
+    # bio = request_data.get("bio", "Default Bio")
+    # post_photo = request_data.get("post_photo", "unset")
+    link = request.args.get('link')
 
+    if not link:
+            return jsonify({"error": "Missing link parameter"}), 400
+
+        # Firestore update
     # Create post with a dynamic ID (incremented)
     post_id = post_number + 1
     post_ref = post_collection_ref.document(str(int(post_id)))  # Convert to string for Firestore ID
 
     post_ref.set({
-        "display_name": data.get("display_name"),
-        "uid": data.get("uid"),
-        "post_photo": "unset",
-        "bio": "SAHIR",
+        "uid":  post_id,
+        "post_photo": link,
+        "descriptio": description,
     })
 
     return jsonify({"message": "Post successfully", "post_id": int(post_id)}),200
