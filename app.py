@@ -60,8 +60,8 @@ def create_Roles(p_ID):
     
 
 #Create Post
-@app.route("/post/<p_ID>/<description>/post/", methods=["GET"])
-def create_posts(p_ID,description):
+@app.route("/post/<p_ID>/<description>/<post>", methods=["GET"])
+def create_posts(p_ID,description,post):
     data = db.collection("Users").document(p_ID).get().to_dict()
 
     # Get the post count dynamically
@@ -86,8 +86,8 @@ def create_posts(p_ID,description):
 
     post_ref.set({
         "uid":  post_id,
-        "post_photo": link,
-        "descriptio": description,
+        post: link,
+        "description": description,
     })
 
     return jsonify({"message": "Post successfully", "post_id": int(post_id)}),200
