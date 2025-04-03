@@ -94,15 +94,12 @@ def create_posts(p_ID,description,post):
 
 
 #Create Profile    
-#@app.route("/create-default-profile/<p_ID>", methods=["GET"])
+# @app.route("/create-default-profile/<p_ID>", methods=["GET"])
 def create_default_profile(p_ID):
     #photo_type=False(supabase)  
     #photo_type=True(firebase)      
-    p_type=False
-    b_type=False
     data = db.collection("Users").document(p_ID).get().to_dict()
-    if "http"  in data.get("p_url"): p_type = True
-    if "http"  in data.get("b_url"): b_type = True
+    
 
     colleges = data.get("colleges", [])  # Expected format: [{"college_name": "SBMP", "college_semORyr": "6-3"}, {...}]
     if not colleges:
@@ -111,23 +108,37 @@ def create_default_profile(p_ID):
         "display_name": data.get("display_name"),
         "p_email":data.get("email"),
         "uid": data.get("uid"),
+        # "display_name":"name",
+        # "p_email":"emaol",
+        # "uid":"dsfv",
         "phone_No": "unset",
         "user_class":"unset",
         "bio": "unset",
         "college_name" : "unset",
         "college_semORyr": "unset",
+        "GitHub":"unset",
+        "Likedin":"unset",
+        "YouTube":"unset",
+        "Instagram":"unset",
     }
     pPhoto={
-        "profile_type":p_type,
-        "banner_type":b_type,
-        "profile_url":data.get("p_url"),
-        "banner_url":data.get("b_url")
+        # "profile_type":p_type,
+        # "banner_type":b_type,
+        # "profile_url":data.get("p_url"),
+        # "banner_url":data.get("b_url")
+        "profile_url":"unset",
+        "banner_url":"unset",
+        "photo_type":"",
+        "banner_type":"",
+        "file":""
+        
     }
-    # roles={
-    #     "Roles":data.get("Roles")
-    # }
+    postText={
+        "description": "",
+        "image":"",
+    }
 
-
+    createFire(f"Users/{p_ID}/Post",postText)
     createFire(f"Users/{p_ID}/Profile",pText,"p_text")
     createFire(f"Users/{p_ID}/Profile",pPhoto,"p_photo")
     
@@ -141,9 +152,6 @@ def edit_default_profile(p_ID,user_class,p_bio,college_name,college_semORyr,disp
     #photo_type=False(supabase)  
     #photo_type=True(firebase)  
     photo_type=False
-    if "http"  in photo_url: photo_type = True
-    if "http"  in p_url: p_type = True
-    if "http"  in b_url: b_type = True
 
     pText= { 
         "display_name": display_name,
