@@ -176,86 +176,6 @@ def edit_default_profile(p_ID,user_class,p_bio,college_name,college_semORyr,disp
     createFire(f"Users/{p_ID}/Profile",pPhoto,"p_photo")
     
     return jsonify({"p_text":pText, "p_photo":pPhoto }),200
-
-@app.route('/upload/imagessss', methods=['POST'])
-def uploadto_supabase():
-    BUCKET_NAME = "profile"
-    folder_path = request.form.get('folder_path')
-    files = request.files.getlist('files')
-    p_ID = request.form.get('p_ID')  # Get user ID from form data
-    # photo_type = request.form.get('photo_type', 'True')  # Default to True if not provided
-
-    if not folder_path or not files or not p_ID:
-        return jsonify({"error": "Missing required parameters (folder_path, files, or p_ID)"}), 400
-
-    uploaded_urls = []
-    db = firestore.client()  # Initialize Firestore client
-
-    for file in files:
-        try:
-            # Upload to Supabase
-            file_bytes = file.read()
-            file_path = f"{folder_path}/{file.filename}"
-            res = supabase.storage.from_(BUCKET_NAME).upload(
-                file_path, file_bytes, {'content-type': file.content_type}
-            )
-            public_url = supabase.storage.from_(BUCKET_NAME).get_public_url(file_path)
-            uploaded_urls.append(public_url)
-
-            # Store in Firebase
-            pPhoto = {
-                # "photo_type": photo_type == 'True',  # Convert string to boolean
-                "banner_url": public_url,
-                "timestamp": firestore.SERVER_TIMESTAMP  # Optional: add upload timestamp
-            }
-            
-            # Create document in Firebase
-            db.collection(f"Users/{p_ID}/Profile").document("p_photo").set(pPhoto)
-
-        except Exception as e:
-            return jsonify({"error": f"Failed to process {file.filename}", "details": str(e)}), 500
-
-    return jsonify({
-        "uploaded_urls": uploaded_urls,
-        "firebase_result": f"Successfully updated profile photo for user {p_ID}"
-    }), 200
-
-@app.route('/upload/imag', methods=['POST'])       
-def upload_supabase():
-    
-    BUCKET_NAME = "profile"
-    folder_path = request.form.get('folder_path')  # Renamed for clarity (instead of 'resume')
-    file = request.files.get('file')  # Single file (key should be 'file' in Postman)
-    uploaded_urls = []
-
-
-    if not folder_path or not file:
-        return jsonify({"error": "Missing folder path or file"}), 400
-
-    try:
-        # Read file content as bytes
-        file_bytes = file.read()
-
-        # Upload the file to Supabase storage
-        file_path = f"{folder_path}/{file.filename}"
-        res = supabase.storage.from_(BUCKET_NAME).upload(
-            file_path, file_bytes, {'content-type': file.content_type}
-        )
-
-        # Get public URL
-        public_url = supabase.storage.from_(BUCKET_NAME).get_public_url(file_path)
-        pPhoto={
-                "banner_url":public_url
-            }
-        uploaded_urls.append(public_url)
-
-        # createFire(f"Users/{p_ID}/Profile", pPhoto, "p_photo")
-    
-        return jsonify({"banner_url": public_url,"uploaded_urls": uploaded_urls}), 200
-        
-    except Exception as e:
-        return jsonify({"error": f"Failed to upload {file.filename}", "details": str(e)}), 500
-        
 @app.route('/upload/files', methods=['POST'])
 def upload_filess():
     BUCKET_NAME = "images"
@@ -275,37 +195,6 @@ def upload_filess():
         return jsonify({"message": "File uploaded successfully", "url": public_url}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-        
-@app.route('/upload/images', methods=['POST'])
-def upload_to_supabase():
-    BUCKET_NAME = "images"
-    folder_path = request.form.get('folder_path')
-    files = request.files.getlist('files')
-
-    if not folder_path or not files:
-        return jsonify({"error": "Missing folder path or files"}), 400
-
-    uploaded_urls = []
-
-    for file in files:
-        try:
-            # Read file content as bytes
-            file_bytes = file.read()
-
-            # Upload the file to Supabase storage
-            file_path = f"{folder_path}/{file.filename}"
-            res = supabase.storage.from_(BUCKET_NAME).upload(
-                file_path, file_bytes, {'content-type': file.content_type}
-            )
-
-            # Get public URL
-            public_url = supabase.storage.from_(BUCKET_NAME).get_public_url(file_path)
-            uploaded_urls.append(public_url)
-
-        except Exception as e:
-            return jsonify({"error": f"Failed to upload {file.filename}", "details": str(e)}), 500
-
-    return jsonify({"uploaded_urls": uploaded_urls}), 200
 #EDIT Profile Image
 @app.route("/edit-profile-image/<p_ID>/<path:photo_url>", methods=["GET","POST"])
 def edit_profile_image(p_ID, photo_url):
